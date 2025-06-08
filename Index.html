@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Firebase DM対応チャットアプリ</title>
+<style>
+ body, html {
+    height: 100%;
+    margin: 0;
+    font-family: sans-serif;
+    }
+ #app {
+   display: flex;
+   height: 100vh;
+   }
+ #leftPanel, #centerPanel, #rightPanel {
+   background-color:#e7e7eb;
+   padding: 10px;
+   box-sizing: border-box;
+   overflow-y: auto;
+   }
+ #leftPanel {
+   color:white;
+   flex: 1; width: 20%;
+   border-right: 1px solid #ccc;
+   background: #4c6473;
+   }
+ #centerPanel {
+   color:white;
+   background-color:#5c9291;
+   flex: 2;
+   width: 50%;
+   border-right: 1px solid #eaf4fc;
+   display: flex;
+   flex-direction: column;
+   }
+ #rightPanel {
+   background-color: #1f3134;
+   color:white;
+  flex: 1;
+   width: 30%;
+   }
+   #myBioDisplay{
+    color:white;
+   }
+ #chatBox {
+   color:black;
+   flex-grow: 1;
+   border: 1px solid #ccc;
+   padding: 5px;
+   overflow-y: auto; background:#80aba9;
+    }
+ #messageForm {
+   margin-top: 10px;
+   display: flex;
+   flex-wrap: wrap;
+   gap: 10px;
+   align-items: flex-end;
+   }
+ #messageInput {
+   flex-grow: 1;
+   padding: 5px;
+   font-size: 16px;
+   min-width: 100px;
+   }
+ button {
+   display:flex;
+   padding: 6px 12px;
+   font-size: 16px;
+   cursor: pointer;
+   border: 1px solid white; background-color: #66cdaa; border-radius: 4px;
+   color:white;
+   }
+ button:hover {
+   background-color: #d0d0d0;
+   }
+ .roomItem {
+   padding: 8px;
+   border-bottom: 1px solid #ddd; cursor: pointer;
+   display: flex;
+   align-items: center; justify-content: space-between;
+   }
+ .roomItem.selected {
+   background: #008899;
+   }
+ .room-list-icon {
+   width: 25px;
+   height: 25px;
+   font-size: 0.9em;
+   margin-right: 8px;
+   border-radius: 50%;
+   display: inline-flex;
+   align-items: center; justify-content: center;
+   color: white;
+   text-transform: uppercase;
+   flex-shrink: 0;
+   }
+ .unread-badge {
+   background-color: #dc3545;
+   color: white;
+   font-size: 0.75em;
+   padding: 2px 6px;
+   border-radius: 12px;
+   margin-left: 10px;
+   min-width: 20px;
+   text-align: center;
+   }
+ #searchResults {
+  color:#43676b;
+   max-height: 200px;
+   overflow-y: auto;
+   background: white;
+   border: 1px solid #ccc; margin-bottom: 10px;
+   margin-top: 5px;
+   padding: 5px;
+   }
+ .searchUserItem {
+   padding: 8px;
+   border-bottom: 1px solid #eee; cursor: pointer;
+   }
+ .searchUserItem:last-child { border-bottom: none;
+ }
+ .searchUserItem:hover { background-color: #f0f0f0; }
+ #loginForm {
+   max-width: 300px;
+   margin: 20px auto;
+   padding: 20px;
+   border: 1px solid #ccc; background: #f9f9f9; }
+ #loginForm input[type="text"], #loginForm input[type="email"], #loginForm input[type="password"] {
+   width: 100%;
+   padding: 6px;
+   margin: 6px 0 12px 0;
+   box-sizing: border-box;
+   }
+ #groupCreationForm {
+   padding: 10px;
+   border: 1px solid #ccc;
+   background-color: #53727d;
+   margin-bottom: 15px;
+   }
+ #groupCreationForm input[type="text"] {
+   width: calc(100% - 12px);
+   padding: 5px;
+   margin-bottom: 10px;
+   }
+ #selectedGroupMembers {
+   border: 1px dashed #ccc;
+   min-height: 30px;
+   padding: 5px;
+   margin-top: 5px;
+   margin-bottom: 10px;
+   }
+ .selectedMemberTag {
+   display: inline-block;
+   background-color: #455765;
+   padding: 3px 7px;
+   margin: 3px;
+   border-radius: 3px solid white;
+   border: 1px soild white;
+   font-size: 0.9em;
+ }
+ .selectedMemberTag button {
+   background: none;
+   border: none;
+   color: #888;
+   cursor: pointer;
+   margin-left: 5px;
+   padding: 0;
+   font-size: 0.8em;
+   }
+ #btnLogout{
+   background-color: #8f2e14;
+ }
+ .user-icon {
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 1.5em;
+   font-weight: bold;
+   color: white;
+   text-transform: uppercase;
+   margin-right: 10px;
+   vertical-align: middle;
+   flex-shrink: 0;
+   border-radius: 3px soild white;
+   }
+ .chat-user-icon {
+   width: 30px;
+   height: 30px;
+   font-size: 1.2em;
+   margin-right: 5px;
+   padding: 2px soild white;
+    }
+ .chat-message {
+   display: flex;
+   align-items: flex-start;
+   margin-bottom: 10px;
+   font-size: 1.0em
+   }
+ .message-content-wrapper { flex-grow: 1; }
+ .message-header {
+   display: flex;
+   align-items: center;
+   margin-bottom: 3px;
+   color:white;
+   font-size:0.5em;
+   }
+ .message-header span {
+   font-size: 1.0em;
+   color: white;
+   margin-left: 5px;
+   }
+ .message-text {
+   padding: 5px 10px;
+   background-color: white;
+   border-radius: 15px;
+   display: inline-block;
+   max-width: 80%;
+   word-wrap: break-word;
+   }
+ #emojiPicker {
+   display: grid;
+   grid-template-columns: repeat(8, 1fr);
+   gap: 5px; padding: 10px;
+   border: 1px solid white;
+   background: #fff; margin-top: 5px; margin-bottom: 10px; max-height: 150px; overflow-y: auto; display: none; width: 100%; box-sizing: border-box; }
+ .emoji-button {
+   font-size: 20px; background: none; border: none; cursor: pointer; padding: 2px; text-align: center;
+   }
+ .emoji-button:hover {
+   background-color: #f0f0f0;
+   }
+ #toggleEmojiPicker { background-color: #f0f0f0; color: #333; font-size: 1.5em; line-height: 1; padding: 0 8px; }
+ #toggleEmojiPicker:hover { background-color: #d0d0d0; }
+ #profileEditForm { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
+ #profileEditForm label { display: block; margin-bottom: 5px; font-weight: bold; }
+ #profileEditForm input[type="text"], #profileEditForm input[type="color"], #profileEditForm textarea { width: calc(100% - 12px); padding: 5px; margin-bottom: 10px; box-sizing: border-box; }
+ #profileEditForm textarea { resize: vertical; min-height: 60px; }
+ #profileEditForm button { width: 100%; padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 4px; }
+ #profileEditForm button:hover { background-color: #218838; }
+ #groupEditForm { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: none; }
+ #groupEditForm label { display: block; margin-bottom: 5px; font-weight: bold; }
+ #groupEditForm input[type="text"] { width: calc(100% - 12px); padding: 5px; margin-bottom: 10px; box-sizing: border-box; }
+ #groupEditForm button { width: 100%; padding: 8px; background-color: #007bff; color: white; border: none; border-radius: 4px; margin-bottom: 5px; }
+ #groupEditForm button:hover { background-color: #0056b3; }
+ #btnRequestGroupDeletion { background-color: #dc3545; color: white; }
+ #btnRequestGroupDeletion:hover { background-color: #c82333; }
+ .group-member-item { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; padding: 5px; border: 1px solid #eee; border-radius: 4px; }
+ .group-member-item button {
+   background-color: #f0f0f0;
+   color: #333;
+   padding: 3px 8px;
+   font-size: 0.8em;
+   width: auto;
+   }
+ .group-member-item button:hover {
+   background-color: #e0e0e0;
+   }
+ #groupMemberAddResults {
+   max-height: 150px;
+   overflow-y: auto;
+   background: white;
+   border: 1px solid #ccc;
+   margin-bottom: 10px;
+   margin-top: 5px;
+   padding: 5px;
+ }
+ #groupDeletionStatus {
+   margin-top: 10px;
+   padding: 10px;
+   border: 1px solid #ffc107;
+   background-color: #fff3cd;
+   color: #856404;
+   border-radius: 4px;
+   font-size: 0.9em;
+   }
+ #groupDeletionStatus button {
+   margin-top: 5px;
+   padding: 5px 10px;
+   font-size: 0.9em;
+   background-color: #007bff;
+   color: white;
+   }
+ #groupDeletionStatus button.reject {
+   background-color: #6c757d;
+   }
+
+
+#btnRequestGroupDeletion{
+ color: #8f2e14;
+}
+
+
+</style>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+
+
+</head>
+<body>
+
+
+<div id="loginScreen">
+ <form id="loginForm" onsubmit="return false;">
+   <h2>ログイン・新規登録</h2>
+   <input type="text" id="regUsername" placeholder="ユーザー名（登録時のみ）" />
+   <input type="email" id="email" placeholder="メールアドレス" required />
+   <input type="password" id="password" placeholder="パスワード" required />
+   <button id="btnSignUp">登録</button>
+   <button id="btnLogin">ログイン</button>
+ </form>
+</div>
+
+
+<div id="app" style="display:none;">
+ <div id="leftPanel">
+   <h3>Rooms</h3>
+   <div id="groupCreationForm">
+       <h4>グループを作成</h4>
+       <input type="text" id="groupNameInput" placeholder="グループ名" />
+       <input type="text" id="searchUserForGroupInput" placeholder="メンバーを検索して追加" style="width: calc(100% - 12px);" />
+       <div id="groupMemberSearchResults"></div>
+       <div id="selectedGroupMembers">
+           <span class="selectedMemberTag" id="currentUserTag"></span>
+       </div>
+       <button id="btnCreateGroup">グループ作成</button>
+   </div>
+   <div>
+     <input type="text" id="searchUserInput" placeholder="DMしたいユーザーを検索" style="width: calc(70% - 6px);" />
+     <button id="btnSearchUser" style="width: calc(30% - 6px);">検索</button>
+   </div>
+   <div id="searchResults"></div>
+   <h4 style="margin-top: 20px;">ChatRooms</h4>
+   <div id="roomList"></div>
+   <button id="btnLogout" style="margin-top: 20px; width: 100%;">ログアウト</button>
+ </div>
+
+
+ <div id="centerPanel">
+   <h3 id="roomTitle">Chat Box</h3>
+   <div id="chatBox">チャットルームを選択してください</div>
+   <form id="messageForm" onsubmit="handleSendMessage(); return false;">
+     <button type="button" id="toggleEmojiPicker">😀</button>
+     <input type="text" id="messageInput" placeholder="メッセージを入力" autocomplete="off" />
+     <button type="submit" id="btnSend">送信</button>
+     <div id="emojiPicker" style="width: 100%; order: -1;"></div>
+   </form>
+ </div>
+
+
+ <div id="rightPanel">
+   <h3>プロフィール</h3>
+   <div id="myProfileSection">
+       <div id="profileContent">
+           <div style="display: flex; align-items: center; margin-bottom: 10px;">
+               <div id="myProfileIcon" class="user-icon"></div>
+               <span id="myUsernameDisplay" style="font-size: 1.2em; font-weight: bold;"></span>
+           </div>
+           <p><strong>Email:</strong> <span id="myEmailDisplay"></span></p>
+           <p><strong>Bio:</strong> <span id="myBioDisplay" style="white-space: pre-wrap; font-size: 0.9em; color: #white;"></span></p>
+       </div>
+       <div id="profileEditForm">
+           <h4>プロフィールを編集</h4>
+           <label for="editUsername">ユーザー名:</label>
+           <input type="text" id="editUsername" placeholder="新しいユーザー名" />
+           <label for="editIconColor">アイコンカラー:</label>
+           <input type="color" id="editIconColor" />
+           <label for="editBio">bio:</label>
+           <textarea id="editBio" placeholder="自己紹介文を入力してください"></textarea>
+           <button id="btnUpdateProfile">更新</button>
+       </div>
+   </div>
+   <div id="groupEditForm">
+       <h4>グループ情報を編集</h4>
+       <label for="editGroupName">グループ名:</label>
+       <input type="text" id="editGroupName" placeholder="新しいグループ名" />
+       <button id="btnUpdateGroupProfile">グループ情報更新</button>
+       <h4 style="margin-top: 15px;">メンバー管理</h4>
+       <input type="text" id="searchUserToAddGroupMember" placeholder="メンバーを追加" style="width: calc(100% - 12px);" />
+       <div id="groupMemberAddResults"></div>
+       <div style="margin-top: 10px;">
+           <p><strong>現在のメンバー:</strong></p>
+           <ul id="currentGroupMembers" style="list-style: none; padding: 0;"></ul>
+       </div>
+       <h4 style="margin-top: 15px;">グループ削除</h4>
+       <div id="groupDeletionStatus" style="display:none;"></div>
+       <button id="btnRequestGroupDeletion">グループ削除リクエスト</button>
+   </div>
+ </div>
+</div>
+
+
+<script>
+ // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+ apiKey: "",
+ authDomain: "",
+ databaseURL: "",
+ projectId: "",
+ storageBucket: "",
+ messagingSenderId: "",
+ appId: "",
+ measurementId: ""
+}; 
+
+
+ firebase.initializeApp(firebaseConfig);
+
+
+ const auth = firebase.auth();
+ const db = firebase.database();
+
+
+ let loginScreen, app, inputUsername, inputEmail, inputPassword, btnSignUp, btnLogin;
+ let roomListDiv, chatBox, roomTitle, profileContent, myProfileSection;
+ let searchUserInput, searchResultsDiv, btnSearchUser, btnLogout, messageInput, btnSend;
+ let groupNameInput, searchUserForGroupInput, groupMemberSearchResultsDiv, selectedGroupMembersDiv, currentUserTag, btnCreateGroup;
+ let emojiPicker, toggleEmojiPickerBtn;
+ let myProfileIcon, myUsernameDisplay, myEmailDisplay, myBioDisplay, editUsernameInput, editIconColorInput, editBioInput, btnUpdateProfile;
+ let groupEditForm, editGroupNameInput, btnUpdateGroupProfile, searchUserToAddGroupMemberInput, groupMemberAddResultsDiv, currentGroupMembersList, btnRequestGroupDeletion, groupDeletionStatusDiv;
+
+
+ let allRegisteredUsers = {};
+ let selectedGroupMembers = {};
+
+
+ let currentUser = null;
+ let currentRoomId = null;
+ let currentRoomData = null;
+ let currentRoomType = null;
+ let rooms = {};
+ let currentRoomMessagesListener = null;
+ let unreadCounts = {};
+ let isRoomManuallySelected = false;
+ let allUsersListener = null;
+ let roomsListener = null;
+ let unreadListener = null;
+
+
+
+
+ document.addEventListener('DOMContentLoaded', () => {
+   loginScreen = document.getElementById("loginScreen");
+   app = document.getElementById("app");
+   inputUsername = document.getElementById("regUsername");
+   inputEmail = document.getElementById("email");
+   inputPassword = document.getElementById("password");
+   btnSignUp = document.getElementById("btnSignUp");
+   btnLogin = document.getElementById("btnLogin");
+   roomListDiv = document.getElementById("roomList");
+   chatBox = document.getElementById("chatBox");
+   roomTitle = document.getElementById("roomTitle");
+   profileContent = document.getElementById("profileContent");
+   myProfileSection = document.getElementById("myProfileSection");
+   searchUserInput = document.getElementById("searchUserInput");
+   searchResultsDiv = document.getElementById("searchResults");
+   btnSearchUser = document.getElementById("btnSearchUser");
+   btnLogout = document.getElementById("btnLogout");
+   messageInput = document.getElementById("messageInput");
+   btnSend = document.getElementById("btnSend");
+   groupNameInput = document.getElementById("groupNameInput");
+   searchUserForGroupInput = document.getElementById("searchUserForGroupInput");
+   groupMemberSearchResultsDiv = document.getElementById("groupMemberSearchResults");
+   selectedGroupMembersDiv = document.getElementById("selectedGroupMembers");
+   currentUserTag = document.getElementById("currentUserTag");
+   btnCreateGroup = document.getElementById("btnCreateGroup");
+   emojiPicker = document.getElementById("emojiPicker");
+   toggleEmojiPickerBtn = document.getElementById("toggleEmojiPicker");
+   myProfileIcon = document.getElementById("myProfileIcon");
+   myUsernameDisplay = document.getElementById("myUsernameDisplay");
+   myEmailDisplay = document.getElementById("myEmailDisplay");
+   myBioDisplay = document.getElementById("myBioDisplay");
+   editUsernameInput = document.getElementById("editUsername");
+   editIconColorInput = document.getElementById("editIconColor");
+   editBioInput = document.getElementById("editBio");
+   btnUpdateProfile = document.getElementById("btnUpdateProfile");
+   groupEditForm = document.getElementById("groupEditForm");
+   editGroupNameInput = document.getElementById("editGroupName");
+   btnUpdateGroupProfile = document.getElementById("btnUpdateGroupProfile");
+   searchUserToAddGroupMemberInput = document.getElementById("searchUserToAddGroupMember");
+   groupMemberAddResultsDiv = document.getElementById("groupMemberAddResults");
+   currentGroupMembersList = document.getElementById("currentGroupMembers");
+   btnRequestGroupDeletion = document.getElementById("btnRequestGroupDeletion");
+   groupDeletionStatusDiv = document.getElementById("groupDeletionStatus");
+
+
+   setupEventListeners();
+   initEmojiPicker();
+ });
+
+
+ function getRandomColor() {
+     const letters = '0123456789ABCDEF';
+     let color = '#';
+     for (let i = 0; i < 6; i++) {
+         color += letters[Math.floor(Math.random() * 16)];
+     }
+     return color;
+ }
+
+
+ function setupEventListeners() {
+   btnSignUp.onclick = handleSignUp;
+   btnLogin.onclick = handleLogin;
+   btnLogout.onclick = handleLogout;
+   // messageForm の onsubmit で handleSendMessage を呼ぶので、btnSend.onclick は不要
+   // btnSend.onclick = handleSendMessage;
+   btnSearchUser.onclick = handleSearchUser;
+   searchUserInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearchUser(); });
+   searchUserForGroupInput.addEventListener('input', handleSearchUserForGroup); // グループ作成時のメンバー検索
+   btnCreateGroup.onclick = handleCreateGroup;
+   toggleEmojiPickerBtn.onclick = handleToggleEmojiPicker;
+   btnUpdateProfile.onclick = handleUpdateProfile;
+   btnUpdateGroupProfile.onclick = handleUpdateGroupProfile;
+   searchUserToAddGroupMemberInput.addEventListener('input', handleSearchUserToAddGroupMember); // グループ編集時のメンバー追加検索
+   btnRequestGroupDeletion.onclick = handleRequestGroupDeletion;
+ }
+
+
+ async function handleSignUp() {
+   const username = inputUsername.value.trim();
+   const email = inputEmail.value.trim();
+   const password = inputPassword.value.trim();
+   if (!username) { alert("ユーザー名を入力してください（登録時のみ）"); return; }
+   if (!email || !password) { alert("メールアドレスとパスワードを入力してください"); return; }
+   try {
+     const cred = await auth.createUserWithEmailAndPassword(email, password);
+     await cred.user.updateProfile({ displayName: username });
+     const initialColor = getRandomColor();
+     await saveUserInfo(cred.user, initialColor, "");
+     alert("登録成功！ログイン状態になりました。");
+     inputUsername.value = ""; inputEmail.value = ""; inputPassword.value = "";
+   } catch (e) { alert("登録エラー: " + e.message); console.error("Signup error:", e); }
+ }
+
+
+ async function saveUserInfo(user, color = null, bio = null) {
+     const userData = {
+         username: user.displayName,
+         username_lower: user.displayName.toLowerCase(),
+         email: user.email,
+     };
+     if (color !== null) userData.color = color;
+     if (bio !== null) userData.bio = bio;
+     try {
+       await db.ref("users/" + user.uid).update(userData);
+     } catch (error) {
+       console.error("Error saving user info:", error);
+     }
+ }
+
+
+ async function handleLogin() {
+   const email = inputEmail.value.trim();
+   const password = inputPassword.value.trim();
+   if (!email || !password) { alert("メールアドレスとパスワードを入力してください"); return; }
+   try {
+     await auth.signInWithEmailAndPassword(email, password);
+     inputEmail.value = ""; inputPassword.value = "";
+   } catch (e) { alert("ログインエラー: " + e.message); console.error("Login error:", e); }
+ }
+
+
+ async function handleLogout() {
+   try {
+     await auth.signOut();
+   } catch (error) {
+     console.error("Logout error:", error);
+   }
+ }
+
+
+ auth.onAuthStateChanged(user => {
+   console.log("Auth state changed. User:", user ? user.uid : "null");
+   if (user) {
+     currentUser = user;
+     loginScreen.style.display = "none";
+     app.style.display = "flex";
+     if (currentUserTag) {
+         currentUserTag.textContent = `${currentUser.displayName || "自分"}`;
+         currentUserTag.dataset.uid = currentUser.uid;
+     }
+     if (roomTitle) roomTitle.textContent = "チャット画面";
+     selectedGroupMembers = { [currentUser.uid]: currentUser.displayName || "匿名" };
+     updateSelectedGroupMembersUI();
+
+
+     loadAllUsersData(); // 全ユーザー情報を監視開始
+
+
+     db.ref("users/" + currentUser.uid).once("value").then(snapshot => {
+         const userData = snapshot.val();
+         let userColor = userData?.color;
+         let userBio = userData?.bio === undefined ? "" : userData.bio; // bioがundefinedなら空文字列
+         if (!userColor) {
+             userColor = getRandomColor();
+             db.ref("users/" + currentUser.uid).update({ color: userColor }).catch(e => console.error("Error saving initial color:", e));
+         }
+          if (userData?.bio === undefined) { // bioが未定義であれば空文字列で保存
+             db.ref("users/" + currentUser.uid).update({ bio: "" }).catch(e => console.error("Error saving initial bio:", e));
+         }
+         updateMyProfileDisplay(currentUser.displayName, userColor, userBio);
+         if (editUsernameInput) editUsernameInput.value = currentUser.displayName || "";
+         if (editIconColorInput) editIconColorInput.value = userColor;
+         if (editBioInput) editBioInput.value = userBio;
+     }).catch(error => {
+         console.error("ユーザーデータ取得エラー:", error);
+         const defaultColor = getRandomColor();
+         updateMyProfileDisplay(currentUser.displayName, defaultColor, "");
+         if (editUsernameInput) editUsernameInput.value = currentUser.displayName || "";
+         if (editIconColorInput) editIconColorInput.value = defaultColor;
+         if (editBioInput) editBioInput.value = "";
+     });
+
+
+     isRoomManuallySelected = false;
+     loadRooms(user.uid); // ルームリスト読み込みと監視開始
+     setupUnreadCountListener(); // 未読数リスナー設定と監視開始
+
+
+   } else {
+     currentUser = null;
+     loginScreen.style.display = "block";
+     app.style.display = "none";
+     clearRoomList(); clearChat(); clearProfile();
+     if (searchResultsDiv) searchResultsDiv.innerHTML = "";
+     allRegisteredUsers = {}; selectedGroupMembers = {};
+     if (groupMemberSearchResultsDiv) groupMemberSearchResultsDiv.innerHTML = "";
+     if (groupNameInput) groupNameInput.value = "";
+     if (searchUserForGroupInput) searchUserForGroupInput.value = "";
+     if (currentUserTag) currentUserTag.innerHTML = "";
+
+
+     if (currentRoomMessagesListener) { // メッセージリスナー解除
+         db.ref(`rooms/${currentRoomId}/messages`).off('child_added', currentRoomMessagesListener);
+         currentRoomMessagesListener = null;
+     }
+     if (allUsersListener) { // 全ユーザー情報リスナー解除
+       db.ref("users").off("value", allUsersListener);
+       allUsersListener = null;
+     }
+     if (roomsListener) { // ルーム情報リスナー解除
+       db.ref("rooms").off("value", roomsListener);
+       roomsListener = null;
+     }
+     if (unreadListener) { // 未読数リスナー解除
+       db.ref("rooms").off("value", unreadListener); // setupUnreadCountListener で rooms を監視しているので
+       unreadListener = null;
+     }
+      // グループ削除リスナーも解除しておく (特定のルームIDに紐づくため、currentRoomIdがnullなら不要だが念のため)
+     if (currentRoomId) {
+         db.ref(`rooms/${currentRoomId}/deletionRequest`).off();
+     }
+
+
+
+
+     unreadCounts = {}; isRoomManuallySelected = false;
+     if (myProfileIcon) { myProfileIcon.innerHTML = ""; myProfileIcon.style.backgroundColor = ""; }
+     if (myUsernameDisplay) myUsernameDisplay.textContent = "";
+     if (myEmailDisplay) myEmailDisplay.textContent = "";
+     if (myBioDisplay) myBioDisplay.textContent = "";
+     if (editUsernameInput) editUsernameInput.value = "";
+     if (editIconColorInput) editIconColorInput.value = "#000000";
+     if (editBioInput) editBioInput.value = "";
+     if (groupEditForm) groupEditForm.style.display = 'none';
+     if (myProfileSection) myProfileSection.style.display = 'block';
+     currentRoomId = null; currentRoomData = null; currentRoomType = null; rooms = {};
+   }
+ });
+
+
+ function loadAllUsersData() {
+   if (allUsersListener) db.ref("users").off("value", allUsersListener); // 古いリスナーを解除
+   allUsersListener = db.ref("users").on("value", snapshot => {
+     allRegisteredUsers = snapshot.val() || {};
+     renderRoomList(); // ユーザー情報が変わるとDM名などが変わる可能性があるので再描画
+     if (currentUser && allRegisteredUsers[currentUser.uid]) {
+         const myData = allRegisteredUsers[currentUser.uid];
+         updateMyProfileDisplay(myData.username, myData.color, myData.bio);
+         if (editUsernameInput) editUsernameInput.value = myData.username;
+         if (editIconColorInput) editIconColorInput.value = myData.color || getRandomColor();
+         if (editBioInput) editBioInput.value = myData.bio || "";
+     }
+     if (currentRoomId && rooms[currentRoomId]) { // 現在のルーム表示も更新
+         selectRoom({ id: currentRoomId, ...rooms[currentRoomId] });
+     }
+   }, error => console.error("Error loading all users data:", error));
+ }
+
+
+ function updateMyProfileDisplay(username, color, bio) {
+     if (myProfileIcon) {
+         if (username) {
+             myProfileIcon.textContent = username.charAt(0).toUpperCase();
+             myProfileIcon.style.backgroundColor = color || getRandomColor();
+         } else {
+             myProfileIcon.textContent = ""; myProfileIcon.style.backgroundColor = "";
+         }
+     }
+     if (myUsernameDisplay) myUsernameDisplay.textContent = username || "";
+     if (myEmailDisplay && currentUser) myEmailDisplay.textContent = currentUser.email || "";
+     if (myBioDisplay) myBioDisplay.textContent = bio || "";
+ }
+
+
+ function loadRooms(uid) {
+   const roomsQuery = db.ref("rooms").orderByChild(`members/${uid}`).equalTo(true);
+   if (roomsListener) db.ref("rooms").off("value", roomsListener); // roomsRefは広すぎるのでクエリに対してoffできない。一旦全解除。
+
+
+   roomsListener = roomsQuery.on("value", snapshot => {
+     console.log("loadRooms: roomsRef onValue triggered. currentRoomId:", currentRoomId, "isRoomManuallySelected:", isRoomManuallySelected);
+     rooms = snapshot.val() || {};
+     renderRoomList();
+
+
+     if (currentRoomId && !rooms[currentRoomId]) {
+         console.log("loadRooms: Current room was deleted, clearing selection.");
+         currentRoomId = null; currentRoomData = null; currentRoomType = null;
+         clearChat();
+         // clearProfile(); // 自分のプロフィールは残す
+         if (groupEditForm) groupEditForm.style.display = 'none';
+         if (myProfileSection) myProfileSection.style.display = 'block';
+         isRoomManuallySelected = false;
+     } else if (currentRoomId && rooms[currentRoomId]) {
+         // 選択中のルームデータが更新された場合、再選択してUI更新
+         selectRoom({ id: currentRoomId, ...rooms[currentRoomId] });
+     } else if (!currentRoomId && Object.keys(rooms).length > 0 && !isRoomManuallySelected) {
+         const firstRoomId = Object.keys(rooms)[0];
+         console.log("loadRooms: Automatically selecting first room:", firstRoomId);
+         selectRoom({ id: firstRoomId, ...rooms[firstRoomId] });
+     }
+   }, error => console.error("Error loading rooms:", error));
+ }
+
+
+ function setupUnreadCountListener() {
+     if (unreadListener) db.ref("rooms").off("value", unreadListener); // 古いリスナーを解除
+
+
+     unreadListener = db.ref("rooms").on("value", async (snapshot) => {
+         if (!currentUser) return;
+         const allRoomsData = snapshot.val() || {};
+         const newUnreadCounts = {};
+         const unreadPromises = [];
+
+
+         for (const roomId in allRoomsData) {
+             const room = allRoomsData[roomId];
+             if (!room.members || !room.members[currentUser.uid]) continue;
+
+
+             const lastReadTimestamp = room.lastRead?.[currentUser.uid] || 0;
+             const messagesRef = db.ref(`rooms/${roomId}/messages`);
+
+
+             unreadPromises.push(
+                 messagesRef.orderByChild('timestamp').startAt(lastReadTimestamp + 1).once('value')
+                     .then(messagesSnapshot => {
+                         let unreadCount = 0;
+                         messagesSnapshot.forEach(messageChild => {
+                             if (messageChild.val().uid !== currentUser.uid) unreadCount++;
+                         });
+                         newUnreadCounts[roomId] = unreadCount;
+                     }).catch(e => console.error(`Error counting unread for ${roomId}:`, e))
+             );
+         }
+         try {
+           await Promise.all(unreadPromises);
+           unreadCounts = newUnreadCounts;
+           renderRoomList();
+         } catch (error) {
+           console.error("Error calculating unread counts:", error);
+         }
+     }, error => console.error("Error in unread count listener:", error));
+ }
+
+
+
+
+ function renderRoomList() {
+   if (!roomListDiv || !currentUser) return;
+   roomListDiv.innerHTML = "";
+   Object.entries(rooms).sort(([,a], [,b]) => { // createdAtでソート（新しいものが上）も検討できる
+       const timeA = Object.values(a.messages || {}).sort((x,y) => y.timestamp - x.timestamp)[0]?.timestamp || a.createdAt || 0;
+       const timeB = Object.values(b.messages || {}).sort((x,y) => y.timestamp - x.timestamp)[0]?.timestamp || b.createdAt || 0;
+       return timeB - timeA;
+   }).forEach(([roomId, room]) => {
+     if (!room.members || !room.members[currentUser.uid]) return;
+
+
+     let roomDisplayName, roomIconHtml;
+     const roomTypeToDisplay = room.type || (roomId.startsWith("dm_") ? "dm" : "group");
+
+
+     if (roomTypeToDisplay === "dm") {
+         const otherUid = Object.keys(room.members).find(uid => uid !== currentUser.uid);
+         const otherUser = allRegisteredUsers[otherUid];
+         if (!otherUser) { console.warn(`renderRoomList: Skipping DM room ${roomId}, other user ${otherUid} not found.`); return; }
+         roomDisplayName = otherUser.username;
+         const initial = otherUser.username.charAt(0).toUpperCase();
+         const color = otherUser.color || getRandomColor();
+         roomIconHtml = `<div class="user-icon room-list-icon" style="background-color: ${escapeHTML(color)};">${escapeHTML(initial)}</div>`;
+     } else { // group or unknown (defaults to group icon)
+         roomDisplayName = room.name || "名称未設定グループ";
+         const groupInitial = room.name ? room.name.charAt(0).toUpperCase() : 'G';
+         const groupColor = room.iconColor || '#007bff'; // グループにもアイコン色を持たせるなら
+         roomIconHtml = `<div class="user-icon room-list-icon" style="background-color: ${escapeHTML(groupColor)};">${escapeHTML(groupInitial)}</div>`;
+     }
+
+
+     const div = document.createElement("div");
+     div.className = "roomItem" + (roomId === currentRoomId ? " selected" : "");
+     div.dataset.roomId = roomId;
+     const unread = unreadCounts[roomId] || 0;
+     const unreadBadgeHtml = unread > 0 ? `<span class="unread-badge">${unread}</span>` : '';
+     div.innerHTML = `<div style="display: flex; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;">${roomIconHtml}<span style="overflow: hidden; text-overflow: ellipsis;">${escapeHTML(roomDisplayName)}</span></div> ${unreadBadgeHtml}`;
+     div.onclick = () => {
+         isRoomManuallySelected = true;
+         selectRoom({ id: roomId, ...room });
+     };
+     roomListDiv.appendChild(div);
+   });
+ }
+
+
+ let messageListenerCallback = null; // コールバックを保持して解除できるようにする
+
+
+ function selectRoom(room) {
+   console.groupCollapsed("selectRoom called for room:", room.id);
+   console.log("Full room object:", room);
+   const newRoomId = room.id;
+   let determinedRoomType = room.type || (newRoomId.startsWith("dm_") ? "dm" : "group");
+   currentRoomType = determinedRoomType; // グローバル更新
+
+
+   if (!room.members) {
+       console.error(`selectRoom: Room ${newRoomId} has no 'members' field.`);
+       console.groupEnd();
+       return;
+   }
+
+
+   // 既存のメッセージリスナーを解除
+   if (currentRoomMessagesListener && messageListenerCallback) {
+       console.log("Detaching old message listener for room:", currentRoomId);
+       db.ref(`rooms/${currentRoomId}/messages`).off('child_added', messageListenerCallback);
+       currentRoomMessagesListener = null;
+       messageListenerCallback = null;
+   }
+   // 既存のグループ削除リスナーを解除
+   if (currentRoomId && groupDeletionStatusDiv) { // currentRoomId が null でないことを確認
+       db.ref(`rooms/${currentRoomId}/deletionRequest`).off();
+   }
+
+
+
+
+   if (chatBox) chatBox.innerHTML = "メッセージを読み込み中..."; // 初期表示
+
+
+   currentRoomId = newRoomId;
+   currentRoomData = room; // room全体を保存
+
+
+   document.querySelectorAll('.roomItem').forEach(item => item.classList.remove('selected'));
+   const selectedRoomElement = Array.from(roomListDiv.children).find(el => el.dataset.roomId === newRoomId);
+   if (selectedRoomElement) selectedRoomElement.classList.add('selected');
+
+
+   updateRoomTitle(room);
+
+
+   if (currentRoomType === "group") {
+       if (myProfileSection) myProfileSection.style.display = 'none';
+       if (groupEditForm) groupEditForm.style.display = 'block';
+       if (editGroupNameInput) editGroupNameInput.value = room.name || "";
+       updateGroupMembersList(room.members);
+       setupGroupDeletionListener(newRoomId); // 新しいルームIDでリスナー設定
+   } else { // DM
+       if (myProfileSection) myProfileSection.style.display = 'block';
+       if (groupEditForm) groupEditForm.style.display = 'none';
+       const otherUid = Object.keys(room.members).find(uid => uid !== currentUser.uid);
+       const otherUser = allRegisteredUsers[otherUid];
+       updateDMProfilePanel(otherUser);
+   }
+
+
+   // 最終既読を更新 (メッセージがあればその最新、なければ現在時刻)
+   db.ref(`rooms/${newRoomId}/messages`).orderByChild('timestamp').limitToLast(1).once('value', snapshot => {
+       let lastTimestamp = firebase.database.ServerValue.TIMESTAMP;
+       if (snapshot.exists()) {
+           const lastMessage = Object.values(snapshot.val())[0];
+           if (lastMessage) lastTimestamp = lastMessage.timestamp;
+       }
+       if (currentUser) {
+            db.ref(`rooms/${newRoomId}/lastRead/${currentUser.uid}`).set(lastTimestamp)
+               .catch(e => console.error("Error updating last read:", e));
+       }
+   });
+
+
+
+
+   const messagesRef = db.ref(`rooms/${newRoomId}/messages`);
+   chatBox.innerHTML = ""; // メッセージロード前に一旦クリア
+
+
+   // 過去メッセージを読み込み (最大100件)
+   messagesRef.orderByChild('timestamp').limitToLast(100).once('value', snapshot => {
+       if (!snapshot.exists() || snapshot.numChildren() === 0) {
+           if (chatBox) chatBox.textContent = "このチャットルームにはまだメッセージがありません。";
+       } else {
+           if (chatBox) chatBox.innerHTML = ""; // 念のため再度クリア
+           snapshot.forEach(childSnapshot => {
+               appendMessageToChatbox(childSnapshot.key, childSnapshot.val());
+           });
+           if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+       }
+
+
+       // 新しいメッセージのリスナーを設定
+       // 古いリスナーは既に解除されているはず
+       if (messageListenerCallback) { // 二重登録防止
+           messagesRef.off('child_added', messageListenerCallback);
+       }
+       messageListenerCallback = (msgSnapshot) => { // コールバックを保持
+           // 既に表示されているメッセージは追加しない (onceでロードされたものとの重複回避)
+           if (chatBox.querySelector(`[data-message-id="${msgSnapshot.key}"]`)) return;
+          
+           if (chatBox.textContent === "このチャットルームにはまだメッセージがありません。") {
+                if (chatBox) chatBox.innerHTML = "";
+           }
+           appendMessageToChatbox(msgSnapshot.key, msgSnapshot.val());
+           if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+
+           if (currentUser && msgSnapshot.val().uid !== currentUser.uid) {
+               db.ref(`rooms/${newRoomId}/lastRead/${currentUser.uid}`).set(msgSnapshot.val().timestamp)
+                   .catch(e => console.error("Error updating last read on new message:", e));
+           }
+       };
+       currentRoomMessagesListener = messagesRef.orderByChild('timestamp').startAt(Date.now()) // 初回ロード後は新しいメッセージのみ取得する工夫
+                                            .on('child_added', messageListenerCallback, error => {
+           console.error("Error in message listener for room", newRoomId, ":", error);
+           if (chatBox) chatBox.textContent = "メッセージの受信中にエラーが発生しました。";
+       });
+
+
+   }, (error) => {
+       console.error("Error loading initial messages for room", newRoomId, ":", error);
+       if (chatBox) chatBox.textContent = "メッセージの読み込み中にエラーが発生しました。";
+   });
+   console.groupEnd();
+ }
+
+
+ function appendMessageToChatbox(messageId, data) {
+     if (!chatBox || !currentUser) return;
+     const div = document.createElement("div");
+     div.className = "chat-message";
+     div.dataset.messageId = messageId;
+     const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : '不明な時間';
+     const senderInfo = allRegisteredUsers[data.uid];
+     const senderUsername = senderInfo?.username || data.username || "不明なユーザー";
+     const senderColor = senderInfo?.color || getRandomColor();
+     const senderInitial = senderUsername.charAt(0).toUpperCase();
+
+
+     div.innerHTML = `
+       <div class="user-icon chat-user-icon" style="background-color: ${escapeHTML(senderColor)};" title="${escapeHTML(senderUsername)}">${escapeHTML(senderInitial)}</div>
+       <div class="message-content-wrapper">
+           <div class="message-header">
+               <span>${escapeHTML(senderUsername)}</span> @ ${timestamp}
+           </div>
+           <div class="message-text">${escapeHTML(data.message)}</div>
+       </div>`;
+     chatBox.appendChild(div);
+ }
+
+
+
+
+ function updateDMProfilePanel(otherUser) {
+     if (!profileContent || !myProfileSection) return;
+     myProfileSection.style.display = 'block'; // 自分のプロフィールセクションを表示
+     if (!otherUser) {
+         profileContent.innerHTML = `<h4>相手情報が見つかりません</h4><p>このDMの相手ユーザーは存在しないか、データが読み込まれていません。</p>`;
+     } else {
+         // DM相手の情報を表示するのではなく、常に自分のプロフィールを表示し、グループ編集フォームを隠す
+         // 右パネルは常に「自分のプロフィール」または「グループ編集」のどちらかなので、DM選択時は「自分のプロフィール」
+         // updateMyProfileDisplay で自分の情報は更新済みのはず
+         if (groupEditForm) groupEditForm.style.display = 'none'; // グループ編集フォームを隠す
+     }
+ }
+
+
+
+
+ function updateRoomTitle(room) {
+     if (!roomTitle || !currentUser) return;
+     let displayRoomName = room.name;
+     const determinedRoomType = room.type || (room.id.startsWith("dm_") ? "dm" : "group");
+
+
+     if (determinedRoomType === "dm") {
+         const otherUid = Object.keys(room.members || {}).find(uid => uid !== currentUser.uid);
+         const otherUser = allRegisteredUsers[otherUid];
+         displayRoomName = `DM: ${otherUser ? otherUser.username : (room.name || "相手不明")}`;
+     } else if (determinedRoomType === "group") {
+         displayRoomName = `グループ: ${room.name || "名称未設定グループ"}`;
+     } else {
+         displayRoomName = room.name || "チャット";
+     }
+     roomTitle.textContent = displayRoomName;
+ }
+
+
+ function handleSendMessage() {
+    const msg = messageInput.value.trim();
+    if (!msg || !currentUser) return;
+    sendMessage(msg);
+    messageInput.value = "";
+    if (emojiPicker.style.display === 'grid') { // 送信後絵文字ピッカーを閉じる
+       emojiPicker.style.display = 'none';
+    }
+ }
+
+
+ function sendMessage(text) {
+   if (!currentRoomId) { console.error("sendMessage: currentRoomId is null."); alert("チャットルームが選択されていません。"); return; }
+   if (!currentUser) { console.error("sendMessage: currentUser is null."); return; }
+   console.log(`sendMessage: Room ${currentRoomId}, User ${currentUser.uid}, Message: ${text}`);
+   db.ref(`rooms/${currentRoomId}/messages`).push({
+     username: currentUser.displayName || "匿名",
+     uid: currentUser.uid,
+     message: text,
+     timestamp: firebase.database.ServerValue.TIMESTAMP
+   }).then(() => {
+       console.log("Message sent successfully to room:", currentRoomId);
+   }).catch(error => {
+       console.error("Message sending error:", error);
+       alert("メッセージの送信に失敗しました: " + error.message);
+   });
+ }
+
+
+ function handleSearchUser() {
+   const keyword = searchUserInput.value.trim().toLowerCase();
+   if (!searchResultsDiv) return;
+   searchResultsDiv.innerHTML = "";
+   if (!keyword) return;
+
+
+   let usersFound = false;
+   Object.entries(allRegisteredUsers).forEach(([uid, user]) => {
+     if (uid === currentUser.uid || !user.username_lower) return;
+     if (user.username_lower.includes(keyword)) {
+         usersFound = true;
+         const div = document.createElement("div");
+         div.className = "searchUserItem";
+         div.textContent = user.username;
+         div.onclick = () => {
+             createOrSelectDMRoom(uid, user.username);
+             if (searchUserInput) searchUserInput.value = "";
+             if (searchResultsDiv) searchResultsDiv.innerHTML = "";
+         };
+         searchResultsDiv.appendChild(div);
+     }
+   });
+   if (!usersFound) searchResultsDiv.textContent = "該当するユーザーが見つかりません。";
+ }
+
+
+ function createOrSelectDMRoom(otherUserId, otherUsername) {
+   if (!currentUser) return;
+   const currentUserId = currentUser.uid;
+   const roomId = currentUserId < otherUserId ? `dm_${currentUserId}_${otherUserId}` : `dm_${otherUserId}_${currentUserId}`;
+   const roomRef = db.ref("rooms/" + roomId);
+
+
+   roomRef.once("value").then(snapshot => {
+     if (!snapshot.exists()) {
+       const newMembers = {};
+       newMembers[currentUserId] = true;
+       newMembers[otherUserId] = true;
+       roomRef.set({
+         type: "dm",
+         members: newMembers,
+         name: `DM with ${otherUsername}`, // DMルーム名も一応設定
+         createdAt: firebase.database.ServerValue.TIMESTAMP,
+         createdBy: currentUserId
+       }).then(() => {
+           console.log("New DM room created:", roomId);
+           isRoomManuallySelected = true;
+           // 新規作成後、setしたデータを元にselectRoomを呼ぶ
+           selectRoom({ id: roomId, type: "dm", members: newMembers, name: `DM with ${otherUsername}` });
+       }).catch(error => { console.error("DM room creation failed:", error); alert("DMルームの作成失敗: " + error.message); });
+     } else {
+       console.log("Existing DM room selected:", roomId);
+       isRoomManuallySelected = true;
+       selectRoom({ id: roomId, ...snapshot.val() }); // 既存のルームデータを渡す
+     }
+   }).catch(error => { console.error("Error checking DM room:", error); alert("DMルーム確認エラー: " + error.message); });
+ }
+
+
+ function handleSearchUserForGroup() { // グループ作成時のメンバー検索
+   const keyword = searchUserForGroupInput.value.trim().toLowerCase();
+   if (!groupMemberSearchResultsDiv || !currentUser) return;
+   groupMemberSearchResultsDiv.innerHTML = "";
+   if (!keyword) return;
+
+
+   let usersFound = false;
+   Object.entries(allRegisteredUsers).forEach(([uid, user]) => {
+     if (selectedGroupMembers[uid] || !user.username_lower) return; // 既に選択済みか自分自身は除外
+     if (user.username_lower.includes(keyword)) {
+         usersFound = true;
+         const div = document.createElement("div");
+         div.className = "searchUserItem";
+         div.textContent = user.username;
+         div.onclick = () => {
+             addMemberToGroupSelection(uid, user.username);
+             searchUserForGroupInput.value = "";
+             groupMemberSearchResultsDiv.innerHTML = "";
+         };
+         groupMemberSearchResultsDiv.appendChild(div);
+     }
+   });
+   if (!usersFound) groupMemberSearchResultsDiv.textContent = "該当ユーザーなし";
+ }
+
+
+ function addMemberToGroupSelection(uid, username) {
+   if (!selectedGroupMembers[uid]) {
+     selectedGroupMembers[uid] = username;
+     updateSelectedGroupMembersUI();
+   }
+ }
+ function updateSelectedGroupMembersUI() {
+   if (!selectedGroupMembersDiv || !currentUser) return;
+   selectedGroupMembersDiv.innerHTML = "";
+   Object.entries(selectedGroupMembers).forEach(([uid, username]) => {
+       const span = document.createElement("span");
+       span.className = "selectedMemberTag";
+       span.dataset.uid = uid;
+       span.textContent = username + (uid === currentUser.uid ? " (自分)" : "");
+       if (uid !== currentUser.uid) {
+           const removeBtn = document.createElement("button");
+           removeBtn.textContent = "x"; removeBtn.type = "button";
+           removeBtn.onclick = (e) => { e.stopPropagation(); removeMemberFromGroupSelection(uid); };
+           span.appendChild(removeBtn);
+       }
+       selectedGroupMembersDiv.appendChild(span);
+   });
+ }
+ function removeMemberFromGroupSelection(uid) {
+   delete selectedGroupMembers[uid];
+   updateSelectedGroupMembersUI();
+ }
+
+
+ async function handleCreateGroup() {
+   if (!currentUser) return;
+   const groupName = groupNameInput.value.trim();
+   if (!groupName) { alert("グループ名を入力してください。"); return; }
+   const membersForDb = Object.keys(selectedGroupMembers).reduce((acc, uid) => { acc[uid] = true; return acc; }, {});
+   if (Object.keys(membersForDb).length < 2) { alert("グループには自分を含めて2人以上必要です。"); return; }
+
+
+   try {
+     const newRoomRef = db.ref("rooms").push();
+     const newRoomId = newRoomRef.key;
+     const newGroupData = {
+       type: "group", name: groupName, members: membersForDb,
+       createdAt: firebase.database.ServerValue.TIMESTAMP, createdBy: currentUser.uid
+     };
+     await newRoomRef.set(newGroupData);
+     alert(`グループ「${groupName}」作成成功！`);
+     groupNameInput.value = ""; searchUserForGroupInput.value = ""; groupMemberSearchResultsDiv.innerHTML = "";
+     selectedGroupMembers = { [currentUser.uid]: currentUser.displayName || "匿名" }; // リセット
+     updateSelectedGroupMembersUI();
+     isRoomManuallySelected = true;
+     selectRoom({ id: newRoomId, ...newGroupData }); // 作成したグループを選択
+   } catch (e) { console.error("グループ作成エラー:", e); alert("グループ作成失敗: " + e.message); }
+ }
+
+
+
+
+ const emojis = ['😀','😃','😄','😁','😆','😅','🤣','😂','🙂','🙃','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😙','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😩','😫','😤','😡','😠','🤬','😈','👿','💀','👻','👽','🤖'];
+ function initEmojiPicker() {
+   if (!emojiPicker) return;
+   emojiPicker.innerHTML = ''; // 初期化時にクリア
+   emojis.forEach(emoji => {
+     const button = document.createElement('button');
+     button.type = 'button'; button.className = 'emoji-button'; button.textContent = emoji;
+     button.onclick = () => {
+       if (!messageInput) return;
+       const start = messageInput.selectionStart; const end = messageInput.selectionEnd;
+       messageInput.value = messageInput.value.substring(0, start) + emoji + messageInput.value.substring(end);
+       messageInput.focus();
+       messageInput.setSelectionRange(start + emoji.length, start + emoji.length);
+     };
+     emojiPicker.appendChild(button);
+   });
+ }
+ function handleToggleEmojiPicker() {
+   if (emojiPicker) emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'grid' : 'none';
+ }
+
+
+ async function handleUpdateProfile() {
+     if (!editUsernameInput || !editIconColorInput || !editBioInput || !currentUser) return;
+     const newUsername = editUsernameInput.value.trim();
+     const newColor = editIconColorInput.value;
+     const newBio = editBioInput.value.trim();
+     if (!newUsername) { alert("ユーザー名を入力してください。"); return; }
+     try {
+         if (currentUser.displayName !== newUsername) {
+           await currentUser.updateProfile({ displayName: newUsername });
+         }
+         await db.ref(`users/${currentUser.uid}`).update({
+             username: newUsername, username_lower: newUsername.toLowerCase(),
+             color: newColor, bio: newBio
+         });
+         alert("プロフィール更新成功！");
+     } catch (error) { console.error("プロフィール更新エラー:", error); alert("プロフィール更新失敗: " + error.message); }
+ }
+
+
+ async function handleUpdateGroupProfile() { // グループ名更新
+     if (!currentRoomId || currentRoomType !== "group" || !editGroupNameInput) { alert("グループチャットを選択してください。"); return; }
+     const newGroupName = editGroupNameInput.value.trim();
+     if (!newGroupName) { alert("グループ名を入力してください。"); return; }
+     try {
+         await db.ref(`rooms/${currentRoomId}`).update({ name: newGroupName });
+         alert("グループ名更新成功！");
+         // rooms[currentRoomId] の name も更新して selectRoom を呼ぶ
+         if (rooms[currentRoomId]) {
+           rooms[currentRoomId].name = newGroupName;
+           selectRoom({ id: currentRoomId, ...rooms[currentRoomId] });
+         }
+     } catch (error) { console.error("グループ名更新エラー:", error); alert("グループ名更新失敗: " + error.message); }
+ }
+
+
+ function handleSearchUserToAddGroupMember() { // グループ編集時のメンバー追加
+   const keyword = searchUserToAddGroupMemberInput.value.trim().toLowerCase();
+   if (!groupMemberAddResultsDiv || !currentUser || !currentRoomData || currentRoomType !== 'group') return;
+   groupMemberAddResultsDiv.innerHTML = "";
+   if (!keyword) return;
+
+
+   let usersFound = false;
+   Object.entries(allRegisteredUsers).forEach(([uid, user]) => {
+       if (currentRoomData.members[uid] || !user.username_lower) return; // 既にメンバーか、ユーザー名がない場合は除外
+       if (user.username_lower.includes(keyword)) {
+           usersFound = true;
+           const div = document.createElement("div");
+           div.className = "searchUserItem"; div.textContent = user.username;
+           div.onclick = async () => {
+               if (confirm(`${user.username} をグループに追加しますか？`)) {
+                   await addMemberToGroup(currentRoomId, uid);
+                   searchUserToAddGroupMemberInput.value = ""; groupMemberAddResultsDiv.innerHTML = "";
+               }
+           };
+           groupMemberAddResultsDiv.appendChild(div);
+       }
+   });
+   if (!usersFound) groupMemberAddResultsDiv.textContent = "該当ユーザーなし";
+ }
+
+
+ async function addMemberToGroup(roomId, uidToAdd) {
+     try {
+         await db.ref(`rooms/${roomId}/members/${uidToAdd}`).set(true);
+         alert("メンバー追加成功。");
+     } catch (error) { console.error("メンバー追加エラー:", error); alert("メンバー追加失敗: " + error.message); }
+ }
+
+
+ function updateGroupMembersList(members) {
+     if (!currentGroupMembersList || !currentUser || !allRegisteredUsers) return;
+     currentGroupMembersList.innerHTML = '';
+     const memberUids = Object.keys(members || {});
+     memberUids.forEach(memberUid => {
+         const memberInfo = allRegisteredUsers[memberUid];
+         if (memberInfo) {
+             const initial = memberInfo.username.charAt(0).toUpperCase();
+             const color = memberInfo.color || getRandomColor();
+             const listItem = document.createElement('li');
+             listItem.className = 'group-member-item';
+             listItem.innerHTML = `
+                 <div style="display: flex; align-items: center;">
+                     <div class="user-icon chat-user-icon" style="background-color: ${escapeHTML(color)};">${escapeHTML(initial)}</div>
+                     <span>${escapeHTML(memberInfo.username)} ${memberUid === currentRoomData?.createdBy ? '(作成者)' : ''} ${memberUid === currentUser.uid ? '(自分)' : ''}</span>
+                 </div>`;
+             // 自分自身でない、かつメンバーが2人以上いる場合のみ削除ボタンを表示 (作成者は削除できないようにするのもあり)
+             if (memberUid !== currentUser.uid && memberUids.length > 1 && memberUid !== currentRoomData?.createdBy) {
+                 const removeBtn = document.createElement('button');
+                 removeBtn.textContent = '削除'; removeBtn.type = 'button';
+                 removeBtn.onclick = async () => {
+                     if (confirm(`${memberInfo.username} をグループから削除しますか？`)) {
+                         await removeMemberFromGroup(currentRoomId, memberUid);
+                     }
+                 };
+                 listItem.appendChild(removeBtn);
+             }
+             currentGroupMembersList.appendChild(listItem);
+         }
+     });
+ }
+
+
+ async function removeMemberFromGroup(roomId, uidToRemove) {
+     try {
+         // メンバーが1人しかいなくなる場合はルームごと削除するなどの考慮も可能
+         await db.ref(`rooms/${roomId}/members/${uidToRemove}`).remove();
+         alert("メンバー削除成功。");
+         // currentRoomData.membersからも削除し、UIを更新
+         if (rooms[roomId] && rooms[roomId].members) {
+           delete rooms[roomId].members[uidToRemove];
+           selectRoom({id: roomId, ...rooms[roomId]}); // UI更新
+         }
+     } catch (error) { console.error("メンバー削除エラー:", error); alert("メンバー削除失敗: " + error.message); }
+ }
+
+
+ async function handleRequestGroupDeletion() {
+     if (!currentRoomId || currentRoomType !== "group" || !currentUser) { alert("グループチャットを選択。"); return; }
+     if (!confirm("本当にこのグループの削除リクエストを開始しますか？")) return;
+     try {
+         const deletionRef = db.ref(`rooms/${currentRoomId}/deletionRequest`);
+         const snapshot = await deletionRef.once('value');
+         if (snapshot.exists()) { alert("既に削除リクエストが開始されています。"); return; }
+         await deletionRef.set({
+             requestedBy: currentUser.uid, requestedAt: firebase.database.ServerValue.TIMESTAMP,
+             votes: { [currentUser.uid]: true }
+         });
+         alert("グループ削除リクエスト開始。他のメンバーの賛成が必要です。");
+     } catch (error) { console.error("グループ削除リクエストエラー:", error); alert("リクエスト失敗: " + error.message); }
+ }
+
+
+ let groupDeletionListener = null;
+ function setupGroupDeletionListener(roomId) {
+     if (!groupDeletionStatusDiv || !btnRequestGroupDeletion || !currentUser) return;
+     const deletionRef = db.ref(`rooms/${roomId}/deletionRequest`);
+    
+     // 既存のリスナーを解除
+     if (groupDeletionListener) {
+         deletionRef.off('value', groupDeletionListener);
+     }
+
+
+     groupDeletionListener = async (snapshot) => { // コールバックを保持
+         const deletionRequest = snapshot.val();
+         groupDeletionStatusDiv.innerHTML = '';
+         groupDeletionStatusDiv.style.display = 'none';
+         btnRequestGroupDeletion.style.display = 'block';
+
+
+         if (deletionRequest && currentRoomData && currentRoomData.members) { // currentRoomData.membersの存在確認
+             groupDeletionStatusDiv.style.display = 'block';
+             btnRequestGroupDeletion.style.display = 'none';
+
+
+             const membersInRoom = Object.keys(currentRoomData.members).length;
+             const votesCount = Object.keys(deletionRequest.votes || {}).length;
+             // 過半数ではなく、全員の賛成が必要な仕様に変更する場合など、条件は調整可能
+             const requiredVotes = membersInRoom > 1 ? Math.floor(membersInRoom / 2) + 1 : 1; // 1人の場合は1票で可
+
+
+             let statusText = `グループ削除リクエスト中: ${votesCount} / ${requiredVotes} 票`;
+
+
+             if (votesCount >= requiredVotes) {
+                 statusText += `<br><strong>削除条件成立！グループを削除します。</strong>`;
+                 groupDeletionStatusDiv.innerHTML = statusText;
+                 await deleteGroup(roomId);
+             } else {
+                 if (!deletionRequest.votes[currentUser.uid]) {
+                     statusText += `<br><button id="btnVoteForDeletion" type="button">賛成</button> <button id="btnRejectDeletion" class="reject" type="button">反対</button>`;
+                 } else {
+                     statusText += `<br>あなたは既に賛成しています。`;
+                 }
+                 groupDeletionStatusDiv.innerHTML = statusText;
+
+
+                 const btnVote = document.getElementById('btnVoteForDeletion');
+                 const btnReject = document.getElementById('btnRejectDeletion');
+                 if (btnVote) btnVote.onclick = async () => { db.ref(`rooms/${roomId}/deletionRequest/votes/${currentUser.uid}`).set(true); };
+                 if (btnReject) btnReject.onclick = async () => { if (confirm("削除リクエストに反対しますか？リクエストが取り消されます。")) { db.ref(`rooms/${roomId}/deletionRequest`).remove(); }};
+             }
+         }
+     };
+     deletionRef.on('value', groupDeletionListener, error => console.error("Deletion listener error:", error));
+ }
+
+
+
+
+ async function deleteGroup(roomIdToDelete) {
+     try {
+         await db.ref(`rooms/${roomIdToDelete}`).remove();
+         alert("グループが削除されました。");
+         if (currentRoomId === roomIdToDelete) { // 現在表示中のルームが削除された場合
+             currentRoomId = null; currentRoomData = null; currentRoomType = null;
+             clearChat();
+             if (groupEditForm) groupEditForm.style.display = 'none';
+             if (myProfileSection) myProfileSection.style.display = 'block';
+             // isRoomManuallySelected = false; // 自動選択を許可するためにリセットも検討
+             // loadRooms(currentUser.uid); // ルームリストを再読み込みして、もしあれば別のルームを自動選択
+         }
+         // rooms オブジェクトからも削除
+         delete rooms[roomIdToDelete];
+         renderRoomList(); // ルームリストを再描画
+     } catch (error) { console.error("グループ削除エラー:", error); alert("グループ削除失敗: " + error.message); }
+ }
+
+
+ function clearRoomList() { if (roomListDiv) roomListDiv.innerHTML = ""; }
+ function clearChat() {
+   if (chatBox) chatBox.innerHTML = "チャットルームを選択してください";
+   if (roomTitle) roomTitle.textContent = "チャット画面";
+ }
+ function clearProfile() { // ログアウト時に自分のプロフィール表示をクリア
+   if (myProfileIcon) { myProfileIcon.innerHTML = ""; myProfileIcon.style.backgroundColor = ""; }
+   if (myUsernameDisplay) myUsernameDisplay.textContent = "";
+   if (myEmailDisplay) myEmailDisplay.textContent = "";
+   if (myBioDisplay) myBioDisplay.textContent = "";
+   if (editUsernameInput) editUsernameInput.value = "";
+   if (editIconColorInput) editIconColorInput.value = "#000000";
+   if (editBioInput) editBioInput.value = "";
+ }
+
+
+ function escapeHTML(str) {
+   if (typeof str !== 'string') return '';
+   return str.replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+ }
+ </script>
+
+
+</body>
+</html>
+
